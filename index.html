@@ -23,6 +23,11 @@ h1{font-size:clamp(24px,5vw,38px);line-height:1.35;margin:12px 0}
 .pet img{width:94px;height:100px;object-fit:contain;object-position:center center;border:3px solid var(--ink);background:#fff;image-rendering:pixelated;flex-shrink:0}
 .pet h2{font-size:18px;margin:0 0 7px}
 .pet p{font-size:12px;line-height:1.65;margin:0}
+.pet-info{min-width:0;flex:1}
+.pet-level{font-size:11px;font-weight:900;margin-top:9px}
+.pet-progress{height:9px;border:2px solid var(--ink);background:#fff;margin-top:5px;overflow:hidden}
+.pet-progress>div{height:100%;width:0;background:repeating-linear-gradient(90deg,#ffcf4a 0 7px,#f0a928 7px 14px);transition:width .2s}
+.pet-xp{font-size:10px;font-weight:700;color:#53647b;margin-top:3px}
 .panel{padding:16px;margin-top:18px}
 .row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .panel h2{font-size:18px;margin:0}
@@ -51,7 +56,7 @@ button:disabled{opacity:.65;cursor:default;box-shadow:none}
 .modal-card .big{font-size:54px;animation:bounce .5s steps(3) infinite alternate}.modal-card h2{margin:10px 0}.modal-card p{font-size:13px;line-height:1.8}
 @keyframes pop{from{transform:scale(.85)}to{transform:scale(1)}}@keyframes bounce{to{transform:translateY(-7px)}}
 footer{text-align:center;font-size:10px;font-weight:900;margin-top:24px}
-@media(max-width:560px){.party{gap:10px}.pet{display:block;padding:9px}.pet img{width:100%;height:145px;margin-bottom:8px;object-fit:contain;object-position:center center}.pet h2{font-size:16px}.pet p{font-size:11px}.panel{padding:12px}.achievements{grid-template-columns:1fr 1fr}.xp{font-size:8px}.hero{padding:18px}}
+@media(max-width:560px){.party{gap:10px}.pet{display:block;padding:9px}.pet img{width:100%;height:145px;margin-bottom:8px;object-fit:contain;object-position:center center}.pet-info{width:100%}.pet h2{font-size:16px}.pet p{font-size:11px}.panel{padding:12px}.achievements{grid-template-columns:1fr 1fr}.xp{font-size:8px}.hero{padding:18px}}
 </style>
 </head>
 <body>
@@ -62,8 +67,8 @@ footer{text-align:center;font-size:10px;font-weight:900;margin-top:24px}
   <p>主線劇情：服侍兩位毛孩主子，守護家園和平！</p>
 </header>
 <section class="party" aria-label="毛孩角色">
-  <article class="pet"><img src="luowang.jpg" alt="羅王，哈士奇"><div><h2>🐺 羅王</h2><p>冷氣之王・散步大魔王<br>「本王要出巡了！」</p></div></article>
-  <article class="pet"><img src="lucky.jpg" alt="Lucky，虎斑白貓"><div><h2>🐱 Lucky</h2><p>尊臀監督官・砂盆巡查員<br>「人類，快去做任務。」</p></div></article>
+  <article class="pet"><img src="luowang.jpg" alt="羅王，哈士奇"><div class="pet-info"><h2>🐺 羅王</h2><p>冷氣之王・散步大魔王<br>「本王要出巡了！」</p><div class="pet-level" id="dogLevel">🐾 LV. 1 小小巡城王</div><div class="pet-progress"><div id="dogBar"></div></div><div class="pet-xp" id="dogXP">0 / 30 親密 XP</div></div></article>
+  <article class="pet"><img src="lucky.jpg" alt="Lucky，虎斑白貓"><div class="pet-info"><h2>🐱 Lucky</h2><p>尊臀監督官・砂盆巡查員<br>「人類，快去做任務。」</p><div class="pet-level" id="catLevel">🐾 LV. 1 幸運小主子</div><div class="pet-progress"><div id="catBar"></div></div><div class="pet-xp" id="catXP">0 / 30 親密 XP</div></div></article>
 </section>
 <section class="panel">
   <div class="row"><h2>📜 今日任務面板</h2><span class="pill" id="counter">0 / 11 完成</span></div>
@@ -105,14 +110,20 @@ const achievements=[
 {id:"seven",emoji:"👑",title:"毛孩帝國首席僕人",desc:"今日全任務通關。",check:s=>s.done.length===tasks.length}
 ];
 const key="luowangLuckyRPG_v2";
-let state={done:[],totalXP:0,rewardDate:""};
-try{const saved=JSON.parse(localStorage.getItem(key)||"null");if(saved&&Array.isArray(saved.done))state={...state,...saved}}catch(e){}
+let state={done:[],totalXP:0,rewardDate:"",dogXP:0,catXP:0};
+try{const saved=JSON.parse(localStorage.getItem(key)||"null");if(saved&&Array.isArray(saved.done))state={...state,...saved,dogXP:Number(saved.dogXP||0),catXP:Number(saved.catXP||0)}}catch(e){}
+const taskPet={walk1:"dog",walk2:"dog",food1:"dog",food2:"dog",acwalk:"dog",acwork:"dog",catpat:"cat",clean:"cat",waterbowls:"cat",waterplants:"both",acsleep:"both"};
+function petLevel(xp){return Math.floor(xp/30)+1}
+function petTitle(kind,level){
+ if(kind==="dog") return level>=5?"傳說級冰風王":level>=4?"雪原巡城大將":level>=3?"王室散步騎士":level>=2?"進階巡城王":"小小巡城王";
+ return level>=5?"傳說級幸運女王":level>=4?"喵星帝國女王":level>=3?"至尊喵皇":level>=2?"進階小主子":"幸運小主子";
+}
 const taskRoot=document.getElementById("tasks");let lastSection="";
 tasks.forEach(t=>{
  if(t.section!==lastSection){const h=document.createElement("div");h.className="section-title";h.textContent=t.section;taskRoot.appendChild(h);lastSection=t.section}
  const label=document.createElement("label");label.className="task";label.dataset.id=t.id;
  const cb=document.createElement("input");cb.type="checkbox";cb.checked=state.done.includes(t.id);cb.setAttribute("aria-label",t.title);
- cb.addEventListener("change",()=>{const before=levelOf(state.totalXP||0);state.done=cb.checked?[...state.done,t.id]:state.done.filter(x=>x!==t.id);state.totalXP=Math.max(0,(state.totalXP||0)+(cb.checked?t.xp:-t.xp));const after=levelOf(state.totalXP);save();render();if(after>before)showModal("⬆️","升級啦！",`恭喜升到 LV. ${after}！羅王與 Lucky 對你的服務非常滿意。`)});
+ cb.addEventListener("change",()=>{const before=levelOf(state.totalXP||0),dogBefore=petLevel(state.dogXP||0),catBefore=petLevel(state.catXP||0);state.done=cb.checked?[...state.done,t.id]:state.done.filter(x=>x!==t.id);const sign=cb.checked?1:-1;state.totalXP=Math.max(0,(state.totalXP||0)+sign*t.xp);const who=taskPet[t.id];if(who==="dog"||who==="both")state.dogXP=Math.max(0,(state.dogXP||0)+sign*(who==="both"?5:t.xp));if(who==="cat"||who==="both")state.catXP=Math.max(0,(state.catXP||0)+sign*(who==="both"?5:t.xp));const after=levelOf(state.totalXP),dogAfter=petLevel(state.dogXP||0),catAfter=petLevel(state.catXP||0);save();render();if(dogAfter>dogBefore)showModal("🐺","羅王升級啦！",`羅王升到 LV. ${dogAfter}：${petTitle("dog",dogAfter)}！`);else if(catAfter>catBefore)showModal("🐱","Lucky 升級啦！",`Lucky 升到 LV. ${catAfter}：${petTitle("cat",catAfter)}！`);else if(after>before)showModal("⬆️","冒險者升級啦！",`恭喜升到 LV. ${after}！羅王與 Lucky 對你的服務非常滿意。`)});
  const main=document.createElement("div");main.className="task-main";const title=document.createElement("div");title.className="task-title";title.textContent=t.title;const desc=document.createElement("div");desc.className="task-desc";desc.textContent=t.desc;main.append(title,desc);
  const xp=document.createElement("div");xp.className="xp";xp.textContent="+"+t.xp+" XP";label.append(cb,main,xp);taskRoot.appendChild(label);
 });
@@ -124,12 +135,15 @@ function render(){
  document.getElementById("counter").textContent=`${done.length} / ${tasks.length} 完成`;document.getElementById("bar").style.width=(done.length/tasks.length*100)+"%";
  document.getElementById("xp").textContent=`${xp} XP`;document.getElementById("level").textContent=`LV. ${levelOf(xp)} ${levelOf(xp)>=5?"毛孩帝國傳說":levelOf(xp)>=3?"資深毛孩管家":"新手冒險者"}`;document.getElementById("next").textContent=`距離升級 ${50-(xp%50)} XP`;
  document.getElementById("rank").textContent="稱號："+(done.length===tasks.length?"毛孩帝國首席僕人 👑":done.length>=8?"資深鏟屎官 🏅":done.length>=4?"正式上任的管家 🛡️":"見習鏟屎官 🌱");
+ const dx=state.dogXP||0,cx=state.catXP||0,dl=petLevel(dx),cl=petLevel(cx);
+ document.getElementById("dogLevel").textContent=`🐾 LV. ${dl} ${petTitle("dog",dl)}`;document.getElementById("dogBar").style.width=((dx%30)/30*100)+"%";document.getElementById("dogXP").textContent=`${dx%30} / 30 親密 XP`;
+ document.getElementById("catLevel").textContent=`🐾 LV. ${cl} ${petTitle("cat",cl)}`;document.getElementById("catBar").style.width=((cx%30)/30*100)+"%";document.getElementById("catXP").textContent=`${cx%30} / 30 親密 XP`;
  document.querySelectorAll(".task").forEach(el=>{const isDone=state.done.includes(el.dataset.id);el.classList.toggle("done",isDone);el.querySelector("input").checked=isDone});
  const unlocked=achievements.filter(a=>a.check(state));document.getElementById("achCount").textContent=`${unlocked.length} / ${achievements.length} 解鎖`;const root=document.getElementById("achievements");root.innerHTML="";
  achievements.forEach(a=>{const el=document.createElement("div");el.className="achievement"+(a.check(state)?" unlocked":"");el.innerHTML=`<div class="emoji">${a.emoji}</div><strong>${a.title}</strong><p>${a.desc}</p>`;root.appendChild(el)});
  const rewardBtn=document.getElementById("dailyReward");if(state.rewardDate===new Date().toLocaleDateString("sv-SE")){rewardBtn.disabled=true;rewardBtn.textContent="✅ 今日登入獎勵已領取"}else{rewardBtn.disabled=false;rewardBtn.textContent="🎁 領取今日登入獎勵"}
 }
-document.getElementById("dailyReward").addEventListener("click",()=>{if(state.rewardDate===new Date().toLocaleDateString("sv-SE"))return;state.rewardDate=new Date().toLocaleDateString("sv-SE");state.totalXP=(state.totalXP||0)+10;save();render();showModal("🎁","登入獎勵領取成功！","+10 XP！今日也是照顧毛孩的好日子。")});
+document.getElementById("dailyReward").addEventListener("click",()=>{if(state.rewardDate===new Date().toLocaleDateString("sv-SE"))return;state.rewardDate=new Date().toLocaleDateString("sv-SE");state.totalXP=(state.totalXP||0)+10;state.dogXP=(state.dogXP||0)+5;state.catXP=(state.catXP||0)+5;save();render();showModal("🎁","登入獎勵領取成功！","+10 冒險 XP，羅王與 Lucky 各獲得 +5 親密 XP！")});
 document.getElementById("closeModal").addEventListener("click",()=>document.getElementById("modal").classList.remove("show"));
 document.getElementById("reset").addEventListener("click",()=>{if(confirm("確定要重置今天的所有任務進度嗎？")){state.done=[];save();render();document.getElementById("toast").textContent="新的一天開始！主子們正在等待服務。🐾"}});
 document.getElementById("share").addEventListener("click",async()=>{const data={title:document.title,text:"來玩《羅王與 Lucky 的毛孩任務 RPG》！",url:location.href};try{if(navigator.share)await navigator.share(data);else if(navigator.clipboard){await navigator.clipboard.writeText(location.href);document.getElementById("toast").textContent="遊戲網址已複製！可以傳給朋友囉。"}else{prompt("複製這個遊戲網址分享給朋友：",location.href)}}catch(e){}});
