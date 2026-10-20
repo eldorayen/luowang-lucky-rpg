@@ -28,6 +28,25 @@ h1{font-size:clamp(24px,5vw,38px);line-height:1.35;margin:12px 0}
 .pet-progress{height:9px;border:2px solid var(--ink);background:#fff;margin-top:5px;overflow:hidden}
 .pet-progress>div{height:100%;width:0;background:repeating-linear-gradient(90deg,#ffcf4a 0 7px,#f0a928 7px 14px);transition:width .2s}
 .pet-xp{font-size:10px;font-weight:700;color:#53647b;margin-top:3px}
+
+.quick-nav{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0 6px}
+.quick-link{display:flex;align-items:center;gap:9px;padding:12px 10px;border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);text-decoration:none;color:var(--ink);min-width:0}
+.quick-link>span:first-child{font-size:24px}
+.quick-link strong{display:block;font-size:12px;line-height:1.5}
+.quick-link small{display:block;font-size:10px;line-height:1.5;margin-top:2px}
+.quick-link .arrow{margin-left:auto;font-size:16px;font-weight:900}
+.task-link{background:#dff1ff}
+.food-link{background:#ffe4b5}
+#tasksPanel,#feedingGuide{scroll-margin-top:12px}
+#feedingGuide{background:#fff0d5;border-color:#a85c25;box-shadow:6px 6px 0 #a85c25}
+#feedingGuide>.row{background:#ffd69a;border:2px dashed #a85c25;padding:10px;margin:-4px -4px 12px}
+#feedingGuide .pill{background:#fff8e8;border-color:#a85c25}
+#feedingGuide .section-title{background:#ffe0ad;border-color:#a85c25}
+#feedingGuide .task{border-color:#c27b42;box-shadow:3px 3px 0 #edc79d}
+#feedingGuide .task[style*="background:#fff0c2"]{background:#fff0c2!important;border-color:#a85c25}
+#feedingGuide .notice{background:#fff8e8;border-left:4px solid #c46b30;padding:10px}
+@media(max-width:390px){.quick-nav{gap:8px}.quick-link{padding:10px 7px;gap:6px}.quick-link>span:first-child{font-size:21px}.quick-link strong{font-size:11px}.quick-link small{font-size:9px}}
+
 .panel{padding:16px;margin-top:18px}
 .row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .panel h2{font-size:18px;margin:0}
@@ -70,7 +89,11 @@ footer{text-align:center;font-size:10px;font-weight:900;margin-top:24px}
   <article class="pet"><img src="luowang.jpg" alt="羅王，哈士奇"><div class="pet-info"><h2>🐺 羅王</h2><p>冷氣之王・散步大魔王<br>「本王要出巡了！」</p><div class="pet-level" id="dogLevel">🐾 LV. 1 小小巡城王</div><div class="pet-progress"><div id="dogBar"></div></div><div class="pet-xp" id="dogXP">0 / 30 親密 XP</div></div></article>
   <article class="pet"><img src="lucky.jpg" alt="Lucky，虎斑白貓"><div class="pet-info"><h2>🐱 Lucky</h2><p>尊臀監督官・砂盆巡查員<br>「人類，快去做任務。」</p><div class="pet-level" id="catLevel">🐾 LV. 1 幸運小主子</div><div class="pet-progress"><div id="catBar"></div></div><div class="pet-xp" id="catXP">0 / 30 親密 XP</div></div></article>
 </section>
-<section class="panel">
+<nav class="quick-nav" aria-label="快速前往">
+  <a class="quick-link task-link" href="#tasksPanel"><span>📜</span><span><strong>今日任務</strong><small>打卡・賺 XP</small></span><span class="arrow">↓</span></a>
+  <a class="quick-link food-link" href="#feedingGuide"><span>🍖</span><span><strong>羅王餵食指南</strong><small>時間・餐點・飯後提醒</small></span><span class="arrow">↓</span></a>
+</nav>
+<section class="panel" id="tasksPanel">
   <div class="row"><h2>📜 今日任務面板</h2><span class="pill" id="counter">0 / 11 完成</span></div>
   <div class="progress"><div id="bar"></div></div>
   <div class="row"><span class="small" id="rank">稱號：見習鏟屎官</span><strong id="xp">0 XP</strong></div>
